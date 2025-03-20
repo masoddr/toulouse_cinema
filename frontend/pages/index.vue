@@ -1,62 +1,71 @@
 <template>
   <div>
     <TheNavbar />
-    <DaySelector @update:day="updateSelectedDay" />
+    <DaySelector v-if="!loading" @update:day="updateSelectedDay" />
     
     <div class="container mx-auto px-4 py-8">
-      <!-- Filtres -->
-      <div class="mb-8 space-y-4">
-        <!-- Barre de recherche -->
-        <div class="max-w-xl mx-auto">
-          <div class="relative">
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Rechercher un film..."
-              class="w-full px-4 py-2 pr-10 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+      <!-- État de chargement -->
+      <div v-if="loading" class="text-center py-12">
+        <p class="text-xl text-gray-600">Chargement des séances...</p>
+      </div>
+      
+      <!-- Message d'erreur -->
+      <div v-else-if="error" class="text-center py-12">
+        <p class="text-xl text-red-600">{{ error }}</p>
+      </div>
+
+      <!-- Contenu principal -->
+      <div v-else>
+        <!-- Filtres -->
+        <div class="mb-8 space-y-4">
+          <!-- Barre de recherche -->
+          <div class="max-w-xl mx-auto">
+            <div class="relative">
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Rechercher un film..."
+                class="w-full px-4 py-2 pr-10 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+              >
+              <span 
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                v-if="searchQuery"
+                @click="searchQuery = ''"
+                role="button"
+                title="Effacer la recherche"
+              >
+                ✕
+              </span>
+            </div>
+          </div>
+
+          <!-- Filtres par cinéma -->
+          <div class="flex flex-wrap justify-center gap-2">
+            <button
+              class="px-4 py-2 rounded-full text-sm font-medium transition-colors"
+              :class="selectedCinema === null ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+              @click="selectedCinema = null"
             >
-            <span 
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-              v-if="searchQuery"
-              @click="searchQuery = ''"
-              role="button"
-              title="Effacer la recherche"
+              Tous les cinémas
+            </button>
+            <button
+              v-for="cinema in cinemas"
+              :key="cinema"
+              class="px-4 py-2 rounded-full text-sm font-medium transition-colors"
+              :class="selectedCinema === cinema ? 'text-white' : 'hover:bg-opacity-10'"
+              :style="{
+                backgroundColor: selectedCinema === cinema ? getCinemaColor(cinema) : getCinemaLightColor(cinema),
+                color: selectedCinema === cinema ? 'white' : getCinemaColor(cinema)
+              }"
+              @click="selectedCinema = cinema"
             >
-              ✕
-            </span>
+              {{ cinema }}
+            </button>
           </div>
         </div>
 
-        <!-- Filtres par cinéma -->
-        <div class="flex flex-wrap justify-center gap-2">
-          <button
-            class="px-4 py-2 rounded-full text-sm font-medium transition-colors"
-            :class="selectedCinema === null ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-            @click="selectedCinema = null"
-          >
-            Tous les cinémas
-          </button>
-          <button
-            v-for="cinema in cinemas"
-            :key="cinema"
-            class="px-4 py-2 rounded-full text-sm font-medium transition-colors"
-            :class="selectedCinema === cinema ? 'text-white' : 'hover:bg-opacity-10'"
-            :style="{
-              backgroundColor: selectedCinema === cinema ? getCinemaColor(cinema) : getCinemaLightColor(cinema),
-              color: selectedCinema === cinema ? 'white' : getCinemaColor(cinema)
-            }"
-            @click="selectedCinema = cinema"
-          >
-            {{ cinema }}
-          </button>
-        </div>
-      </div>
-
-      <h1 class="text-3xl font-bold mb-8">Programme des séances</h1>
-      
-      <div v-if="loading">Chargement...</div>
-      <div v-else-if="error">{{ error }}</div>
-      <div v-else>
+        <h1 class="text-3xl font-bold mb-8">Programme des séances</h1>
+        
         <div v-if="filteredDayFilms.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           <NuxtLink
             v-for="film in filteredDayFilms"
@@ -236,6 +245,11 @@ const formatDuration = (minutes: number) => {
   
   return `${hours}h${remainingMinutes.toString().padStart(2, '0')}`
 }
+
+// Charger les données au montage
+onMounted(() => {
+  store.fetchSeances()
+})
 </script>
 
 <style scoped>
