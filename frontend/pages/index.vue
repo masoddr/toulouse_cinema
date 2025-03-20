@@ -78,23 +78,24 @@
               <img :src="film.poster" :alt="film.titre" 
                    class="w-full h-[360px] object-cover">
               <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div class="absolute bottom-0 left-0 right-0 p-4 text-white">
-                  <div class="flex items-center gap-2 text-sm">
-                    <span>{{ formatDuration(film.duree) }}</span>
-                    <span v-if="film.note" class="flex items-center">
-                      <span class="text-yellow-400">★</span>
-                      <span class="ml-1">{{ film.note.toFixed(1) }}</span>
-                    </span>
-                  </div>
-                </div>
+                <!-- Suppression du contenu de l'overlay puisqu'il n'est plus nécessaire -->
               </div>
             </div>
             
             <!-- Informations du film -->
             <div class="p-4">
-              <h3 class="font-bold text-lg mb-3 group-hover:text-blue-600 transition-colors">
+              <h3 class="font-bold text-lg mb-2 group-hover:text-blue-600 transition-colors">
                 {{ film.titre }}
               </h3>
+
+              <!-- Déplacement des informations de durée et note ici -->
+              <div class="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                <span>{{ formatDuration(film.duree) }}</span>
+                <span v-if="film.note" class="flex items-center">
+                  <span class="text-yellow-400">★</span>
+                  <span class="ml-1">{{ film.note.toFixed(1) }}</span>
+                </span>
+              </div>
 
               <!-- Séances par cinéma -->
               <div class="space-y-3">
@@ -286,5 +287,11 @@ button:focus {
   outline: none;
   ring: 2px;
   ring-offset: 2px;
+}
+
+.duration {
+  font-size: 0.9em;
+  color: #666;
+  margin: 4px 0;
 }
 </style> 
