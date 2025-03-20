@@ -58,7 +58,8 @@ def search_movie_tmdb(title: str, is_french_version: bool = False) -> Optional[D
             "runtime": movie_details.get("runtime"),
             "release_date": movie_details.get("release_date"),
             "vote_average": movie_details.get("vote_average"),
-            "trailer_url": trailer_url
+            "trailer_url": trailer_url,
+            "synopsis": movie_details.get("overview", "")
         }
         
     except requests.exceptions.RequestException as e:

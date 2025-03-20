@@ -3,7 +3,7 @@
 Script de production pour la mise à jour des séances de cinéma.
 
 Ce script est destiné à être exécuté en production pour :
-1. Scraper les nouvelles séances
+1. Scraper les nouvelles séances et les synopsis
 2. Mettre à jour le cache backend (seances_cache.json)
 3. Enrichir les données avec TMDb (durée, date de sortie, note)
 4. Copier les données vers le frontend (public/seances.json)
@@ -25,6 +25,7 @@ from pathlib import Path
 import shutil
 import logging
 from datetime import datetime
+import json
 
 # Ajouter le répertoire parent au PYTHONPATH
 sys.path.append(str(Path(__file__).parent.parent))
@@ -34,6 +35,12 @@ from get_tmdb_data import update_seances_with_tmdb_data
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+def datetime_handler(obj):
+    """Gestionnaire personnalisé pour la sérialisation JSON des objets datetime"""
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
 def main():
     logger.info("Démarrage du scraping des séances...")
@@ -48,8 +55,14 @@ def main():
     
     # 1. Scraping avec AllocineScraper
     scraper = AllocineScraper()
-    scraper.save_to_json(cache_path)
-    logger.info(f"Cache backend mis à jour : {cache_path}")
+    
+    # Récupérer les séances et les synopsis
+    seances_data = scraper.get_seances_with_synopsis()
+    
+    # Sauvegarder dans le cache avec le gestionnaire personnalisé
+    with open(cache_path, 'w', encoding='utf-8') as f:
+        json.dump(seances_data, f, ensure_ascii=False, indent=2, default=datetime_handler)
+    logger.info(f"Cache backend mis à jour avec les synopsis : {cache_path}")
     
     # 2. Copie vers le frontend
     shutil.copy2(cache_path, frontend_path)

@@ -13,9 +13,9 @@
 
           
           <div class="mb-6">
-            <p class="text-gray-600">Durée : {{ formatDuration(film.duree) }}</p>
-            <p class="text-gray-600">Date de sortie : {{ formatDate(film.date_sortie) }}</p>
-            <p class="text-gray-600">Synopsis : {{ film.synopsis }}</p>
+            <p class="text-gray-600"><strong><u>Durée</u></strong> : {{ formatDuration(film.duree) }}</p>
+            <p class="text-gray-600"><strong><u>Date de sortie</u></strong> : {{ formatDate(film.date_sortie) }}</p>
+            <p class="text-gray-600"><strong><u>Synopsis</u></strong> : {{ film.synopsis }}</p>
             <div v-if="film.note" class="flex items-center mt-2">
               <span class="text-yellow-500 text-2xl">★</span>
               <span class="ml-2 text-xl">{{ film.note.toFixed(1) }}/10</span>

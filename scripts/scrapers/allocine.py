@@ -8,6 +8,8 @@ import urllib.parse
 import unicodedata
 from scripts.constants.cinemas import CINEMAS
 import os
+from scripts.get_tmdb_data import search_movie_tmdb
+import time
 
 try:
     from allocineAPI.allocineAPI import allocineAPI
@@ -302,3 +304,68 @@ class AllocineScraper(BaseScraper):
             
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(seances, f, ensure_ascii=False, indent=2)
+
+    def get_seances_with_synopsis(self):
+        """
+        Récupère les séances et les synopsis des films
+        """
+        seances = self.get_seances()  # méthode existante
+        
+        # Garder une trace des synopsis déjà récupérés pour éviter les doublons
+        synopsis_cache = {}
+        
+        # Pour chaque film, récupérer le synopsis et convertir les dates
+        for seance in seances:
+            # Convertir l'objet datetime en string pour la sérialisation JSON
+            if isinstance(seance.get('jour'), datetime):
+                seance['jour'] = seance['jour'].isoformat()
+            
+            titre = seance['titre']
+            
+            # Vérifier si on a déjà le synopsis pour ce film
+            if titre in synopsis_cache:
+                seance['synopsis'] = synopsis_cache[titre]
+                continue
+                
+            # Essayer d'abord avec Allociné
+            synopsis = ""
+            film_id = seance.get('allocine_id')
+            if film_id:
+                synopsis = self.get_film_synopsis(film_id)
+            
+            # Si pas de synopsis sur Allociné, essayer avec TMDb
+            if not synopsis or synopsis.isspace():
+                logger.info(f"Recherche du synopsis sur TMDb pour : {titre}")
+                tmdb_data = search_movie_tmdb(titre)
+                if tmdb_data and tmdb_data.get('synopsis'):
+                    synopsis = tmdb_data['synopsis']
+                    logger.info(f"Synopsis trouvé sur TMDb pour : {titre}")
+            
+            # Sauvegarder le synopsis dans le cache et la séance
+            synopsis_cache[titre] = synopsis
+            seance['synopsis'] = synopsis
+            
+            # Petit délai pour éviter de surcharger les APIs
+            time.sleep(0.2)
+        
+        return seances
+    
+    def get_film_synopsis(self, film_id):
+        """
+        Récupère le synopsis d'un film à partir de son ID Allociné
+        """
+        url = f"https://www.allocine.fr/film/fichefilm_gen_cfilm={film_id}.html"
+        try:
+            response = requests.get(url, headers=self.headers)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Recherche du synopsis dans la page
+            synopsis_div = soup.find('div', class_='content-txt')
+            if synopsis_div:
+                return synopsis_div.text.strip()
+            
+        except Exception as e:
+            logger.error(f"Erreur lors de la récupération du synopsis pour le film {film_id}: {e}")
+        
+        return ""
