@@ -32,7 +32,7 @@ Développer une application web qui agrège les séances de cinéma de tous les 
 
 ## Architecture technique
 
-### Backend (Scraping)
+### Scraping
 - **Script**: `update_seances.py`
   - Langage: Python 3.11+
   - Fréquence d'exécution: 1 fois par jour (00h01)
