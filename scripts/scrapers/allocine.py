@@ -47,7 +47,7 @@ class AllocineScraper(BaseScraper):
         return title
 
     def get_movie_details(self, movie_title):
-        """Récupère les détails d'un film, y compris son affiche"""
+        """Récupère les détails d'un film, y compris son affiche et son synopsis"""
         try:
             # Encoder le titre pour l'URL
             encoded_title = urllib.parse.quote(movie_title)
@@ -60,6 +60,12 @@ class AllocineScraper(BaseScraper):
             logger.debug(f"Status code: {response.status_code}")
             
             soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Récupérer le synopsis
+            synopsis = ""
+            synopsis_element = soup.select_one('.content-txt')
+            if synopsis_element:
+                synopsis = synopsis_element.text.strip()
             
             # Essayer plusieurs sélecteurs pour trouver l'affiche
             poster_selectors = [
@@ -96,8 +102,11 @@ class AllocineScraper(BaseScraper):
                             if not poster_url.startswith('http'):
                                 poster_url = f"https:{poster_url}"
                             
-                            logger.info(f"Affiche trouvée pour '{movie_title}': {poster_url}")
-                            return {'poster': poster_url}
+                            logger.info(f"Affiche et synopsis trouvés pour '{movie_title}'")
+                            return {
+                                'poster': poster_url,
+                                'synopsis': synopsis
+                            }
             
             # Si aucune affiche n'est trouvée, essayer une recherche plus générale
             fallback_url = f"https://www.allocine.fr/film/fichefilm_gen_cfilm={movie_title}.html"
@@ -111,15 +120,24 @@ class AllocineScraper(BaseScraper):
                     if not poster_url.startswith('http'):
                         poster_url = f"https:{poster_url}"
                     logger.info(f"Affiche trouvée (fallback) pour '{movie_title}': {poster_url}")
-                    return {'poster': poster_url}
+                    return {
+                        'poster': poster_url,
+                        'synopsis': synopsis
+                    }
             
             # Si toujours rien trouvé, utiliser une image par défaut
             logger.warning(f"Aucune affiche trouvée pour '{movie_title}'")
-            return {'poster': 'https://www.allocine.fr/skin/img/placeholder/poster.jpg'}
+            return {
+                'poster': 'https://www.allocine.fr/skin/img/placeholder/poster.jpg',
+                'synopsis': synopsis
+            }
             
         except Exception as e:
             logger.error(f"Erreur lors de la récupération des détails du film '{movie_title}': {e}")
-            return {'poster': 'https://www.allocine.fr/skin/img/placeholder/poster.jpg'}
+            return {
+                'poster': 'https://www.allocine.fr/skin/img/placeholder/poster.jpg',
+                'synopsis': ''
+            }
 
     def get_movie_poster_from_cinema_page(self, movie_title, cinema_id):
         """Récupère l'affiche d'un film depuis la page du cinéma"""
@@ -172,20 +190,24 @@ class AllocineScraper(BaseScraper):
                 for movie in seances_data:
                     titre = movie.get('title', '')
                     
-                    # On ne récupère l'affiche qu'une seule fois par film
+                    # On ne récupère l'affiche et le synopsis qu'une seule fois par film
                     if not any(s['titre'] == titre for s in all_seances):
                         # Chercher l'affiche sur la page du cinéma
                         poster_url = self.get_movie_poster_from_cinema_page(titre, cinema_id)
+                        synopsis = ''
                         
                         # Si pas trouvé, essayer l'autre méthode
                         if not poster_url:
                             movie_details = self.get_movie_details(titre)
                             poster_url = movie_details.get('poster', '')
+                            synopsis = movie_details.get('synopsis', '')
                         
                         logger.info(f"Film '{titre}' - URL de l'affiche: {poster_url}")
                     else:
-                        # Réutiliser l'URL de l'affiche déjà trouvée
-                        poster_url = next(s['poster'] for s in all_seances if s['titre'] == titre)
+                        # Réutiliser l'URL de l'affiche et le synopsis déjà trouvés
+                        existing_seance = next(s for s in all_seances if s['titre'] == titre)
+                        poster_url = existing_seance['poster']
+                        synopsis = existing_seance.get('synopsis', '')
 
                     # Convertir les caractères encodés en UTF-8
                     try:
@@ -214,7 +236,8 @@ class AllocineScraper(BaseScraper):
                                 'version': version,
                                 'duree': '',
                                 'tags': [],
-                                'poster': poster_url
+                                'poster': poster_url,
+                                'synopsis': synopsis
                             })
                         except ValueError as e:
                             logger.error(f"Format d'horaire invalide {horaire}: {e}")

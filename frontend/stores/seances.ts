@@ -13,6 +13,7 @@ interface Seance {
   date_sortie: string
   note: number
   trailer_url: string | null
+  synopsis: string
 }
 
 interface SeancesData {

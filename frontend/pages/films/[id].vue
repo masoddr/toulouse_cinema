@@ -10,10 +10,12 @@
         
         <div class="flex-1">
           <h1 class="text-3xl font-bold mb-4">{{ film.titre }}</h1>
+
           
           <div class="mb-6">
             <p class="text-gray-600">Durée : {{ formatDuration(film.duree) }}</p>
             <p class="text-gray-600">Date de sortie : {{ formatDate(film.date_sortie) }}</p>
+            <p class="text-gray-600">Synopsis : {{ film.synopsis }}</p>
             <div v-if="film.note" class="flex items-center mt-2">
               <span class="text-yellow-500 text-2xl">★</span>
               <span class="ml-2 text-xl">{{ film.note.toFixed(1) }}/10</span>
