@@ -11,7 +11,7 @@
               class="h-8 w-8"
             />
             <span class="text-xl font-semibold text-white">
-              Cinémas Toulouse
+              Cinéphoria
             </span>
           </NuxtLink>
         </div>
