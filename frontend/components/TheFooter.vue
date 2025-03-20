@@ -33,9 +33,9 @@
       
       <div class="text-center mt-8 pt-8 border-t border-gray-200">
         <p class="text-sm text-gray-600 mb-2">
-          © {{ new Date().getFullYear() }} Votre Site. Tous droits réservés.
+          © {{ new Date().getFullYear() }} cinemas-toulouse. Tous droits réservés.
         </p>
-        <p class="text-sm text-gray-600 mb-2">
+        <p class="text-sm text-gray-600">
           Site créé par 
           <a 
             href="https://masoddr.github.io/portfolio_massyl/" 
@@ -44,17 +44,6 @@
             class="text-primary hover:underline"
           >
             Massyl OUADDOUR
-          </a>
-        </p>
-        <p class="text-sm text-gray-600">
-          <a 
-            href="https://www.flaticon.com/fr/icones-gratuites/cinema" 
-            title="cinéma icônes"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="hover:underline"
-          >
-            Cinéma icônes créées par juicy_fish - Flaticon
           </a>
         </p>
       </div>

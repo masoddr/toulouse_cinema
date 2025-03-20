@@ -24,6 +24,21 @@
         L'ensemble de ce site relève de la législation française et internationale 
         sur le droit d'auteur et la propriété intellectuelle.
       </p>
+
+      <h2 class="text-2xl font-semibold mt-8 mb-4">4. Attributions</h2>
+      <div class="space-y-4">
+        <p>
+          <a 
+            href="https://www.flaticon.com/fr/icones-gratuites/cinema" 
+            title="cinéma icônes"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-primary hover:underline"
+          >
+            Cinéma icônes créées par juicy_fish - Flaticon
+          </a>
+        </p>
+      </div>
     </div>
   </div>
 </template> 
