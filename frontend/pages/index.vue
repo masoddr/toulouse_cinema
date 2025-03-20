@@ -4,68 +4,133 @@
     <DaySelector @update:day="updateSelectedDay" />
     
     <div class="container mx-auto px-4 py-8">
+      <!-- Filtres -->
+      <div class="mb-8 space-y-4">
+        <!-- Barre de recherche -->
+        <div class="max-w-xl mx-auto">
+          <div class="relative">
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Rechercher un film..."
+              class="w-full px-4 py-2 pr-10 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+            >
+            <span 
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+              v-if="searchQuery"
+              @click="searchQuery = ''"
+              role="button"
+              title="Effacer la recherche"
+            >
+              ✕
+            </span>
+          </div>
+        </div>
+
+        <!-- Filtres par cinéma -->
+        <div class="flex flex-wrap justify-center gap-2">
+          <button
+            class="px-4 py-2 rounded-full text-sm font-medium transition-colors"
+            :class="selectedCinema === null ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+            @click="selectedCinema = null"
+          >
+            Tous les cinémas
+          </button>
+          <button
+            v-for="cinema in cinemas"
+            :key="cinema"
+            class="px-4 py-2 rounded-full text-sm font-medium transition-colors"
+            :class="selectedCinema === cinema ? 'text-white' : 'hover:bg-opacity-10'"
+            :style="{
+              backgroundColor: selectedCinema === cinema ? getCinemaColor(cinema) : getCinemaLightColor(cinema),
+              color: selectedCinema === cinema ? 'white' : getCinemaColor(cinema)
+            }"
+            @click="selectedCinema = cinema"
+          >
+            {{ cinema }}
+          </button>
+        </div>
+      </div>
+
       <h1 class="text-3xl font-bold mb-8">Programme des séances</h1>
       
       <div v-if="loading">Chargement...</div>
       <div v-else-if="error">{{ error }}</div>
       <div v-else>
-        <div v-if="selectedDayFilms" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div
-            v-for="film in selectedDayFilms"
+        <div v-if="filteredDayFilms.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+          <NuxtLink
+            v-for="film in filteredDayFilms"
             :key="film.tmdb_id"
-            class="bg-white rounded-lg shadow-md overflow-hidden"
+            :to="`/films/${film.tmdb_id}`"
+            class="bg-white rounded-lg shadow-md overflow-hidden transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group"
           >
-            <div class="flex">
-              <!-- Image du film -->
+            <!-- Image avec overlay au survol -->
+            <div class="relative">
               <img :src="film.poster" :alt="film.titre" 
-                   class="w-48 h-72 object-cover">
-              
-              <!-- Informations du film -->
-              <div class="flex-1 p-4">
-                <div class="mb-4">
-                  <h3 class="font-bold text-xl mb-2">{{ film.titre }}</h3>
-                  <div class="flex items-center gap-4 text-sm text-gray-600">
-                    <span>{{ film.duree }} min</span>
+                   class="w-full h-[360px] object-cover">
+              <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div class="absolute bottom-0 left-0 right-0 p-4 text-white">
+                  <div class="flex items-center gap-2 text-sm">
+                    <span>{{ formatDuration(film.duree) }}</span>
                     <span v-if="film.note" class="flex items-center">
-                      <span class="text-yellow-500">★</span>
-                      <span class="ml-1">{{ film.note.toFixed(1) }}/10</span>
+                      <span class="text-yellow-400">★</span>
+                      <span class="ml-1">{{ film.note.toFixed(1) }}</span>
                     </span>
                   </div>
                 </div>
+              </div>
+            </div>
+            
+            <!-- Informations du film -->
+            <div class="p-4">
+              <h3 class="font-bold text-lg mb-3 group-hover:text-blue-600 transition-colors">
+                {{ film.titre }}
+              </h3>
 
-                <!-- Séances par cinéma -->
-                <div class="space-y-4">
-                  <div 
-                    v-for="(seances, cinema) in filmSeancesByCinema(film.tmdb_id)" 
-                    :key="cinema"
-                    class="border-t pt-2"
+              <!-- Séances par cinéma -->
+              <div class="space-y-3">
+                <div 
+                  v-for="(seances, cinema) in filmSeancesByCinema(film.tmdb_id)" 
+                  :key="cinema"
+                  class="border-t pt-2"
+                >
+                  <h4 
+                    class="font-medium mb-2 flex items-center gap-2"
+                    :style="{ color: getCinemaColor(cinema) }"
                   >
-                    <h4 class="font-semibold text-gray-700 mb-2">{{ cinema }}</h4>
-                    <div class="flex flex-wrap gap-2">
-                      <div
-                        v-for="seance in seances"
-                        :key="seance.heure"
-                        class="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-sm"
+                    <span 
+                      class="inline-block w-2 h-2 rounded-full"
+                      :style="{ backgroundColor: getCinemaColor(cinema) }"
+                    ></span>
+                    {{ cinema }}
+                  </h4>
+                  <div class="flex flex-wrap gap-1.5">
+                    <div
+                      v-for="seance in seances"
+                      :key="seance.heure"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm transition-colors"
+                      :style="{
+                        backgroundColor: getCinemaLightColor(cinema),
+                        color: getCinemaColor(cinema),
+                        '--tw-ring-color': getCinemaColor(cinema)
+                      }"
+                    >
+                      <span class="font-medium">{{ seance.heure }}</span>
+                      <span 
+                        class="text-xs opacity-75"
+                        :style="{ color: getCinemaColor(cinema) }"
                       >
-                        <span class="font-medium">{{ seance.heure }}</span>
-                        <span class="text-xs text-gray-500">{{ seance.version }}</span>
-                      </div>
+                        {{ seance.version }}
+                      </span>
                     </div>
                   </div>
                 </div>
-
-                <!-- Lien vers la page du film -->
-                <div class="mt-4 flex justify-end">
-                  <NuxtLink 
-                    :to="`/films/${film.tmdb_id}`"
-                    class="text-blue-500 hover:text-blue-700 text-sm font-medium"
-                  >
-                    Plus d'informations →
-                  </NuxtLink>
-                </div>
               </div>
             </div>
-          </div>
+          </NuxtLink>
+        </div>
+        <div v-else class="text-center py-12 text-gray-500">
+          Aucun film ne correspond à votre recherche
         </div>
       </div>
     </div>
@@ -74,16 +139,18 @@
 
 <script setup lang="ts">
 import { useSeancesStore } from '~/stores/seances'
+import { useCinemasStore } from '~/stores/cinemas'
 import { storeToRefs } from 'pinia'
 
 const store = useSeancesStore()
-const { seancesByDay, loading, error } = storeToRefs(store)
+const cinemaStore = useCinemasStore()
+const { seancesByDay, loading, error, cinemas } = storeToRefs(store)
 
-// Charger les données au montage
-onMounted(() => {
-  store.fetchSeances()
-})
+// États des filtres
+const searchQuery = ref('')
+const selectedCinema = ref<string | null>(null)
 
+// État de la recherche
 const selectedDay = ref('')
 const selectedDaySeances = computed(() => 
   selectedDay.value ? seancesByDay.value[selectedDay.value] : []
@@ -100,6 +167,29 @@ const selectedDayFilms = computed(() => {
     }
   })
   return Array.from(uniqueFilms.values())
+})
+
+// Filtrer les films par titre et cinéma
+const filteredDayFilms = computed(() => {
+  let films = selectedDayFilms.value
+
+  // Filtre par recherche
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase().trim()
+    films = films.filter(film => 
+      film.titre.toLowerCase().includes(query)
+    )
+  }
+
+  // Filtre par cinéma
+  if (selectedCinema.value) {
+    films = films.filter(film => {
+      const seances = filmSeancesByCinema(film.tmdb_id)
+      return seances[selectedCinema.value]?.length > 0
+    })
+  }
+
+  return films
 })
 
 // Grouper les séances par cinéma pour un film donné
@@ -126,6 +216,26 @@ watch(seancesByDay, (newValue) => {
     selectedDay.value = Object.keys(newValue).sort()[0]
   }
 }, { immediate: true })
+
+// Fonctions pour les couleurs des cinémas
+const getCinemaColor = (cinema: string) => cinemaStore.getColor(cinema)
+const getCinemaLightColor = (cinema: string) => cinemaStore.getLightColor(cinema)
+
+// Formater la durée en heures et minutes
+const formatDuration = (minutes: number) => {
+  const hours = Math.floor(minutes / 60)
+  const remainingMinutes = minutes % 60
+  
+  if (hours === 0) {
+    return `${minutes}min`
+  }
+  
+  if (remainingMinutes === 0) {
+    return `${hours}h`
+  }
+  
+  return `${hours}h${remainingMinutes.toString().padStart(2, '0')}`
+}
 </script>
 
 <style scoped>
@@ -135,5 +245,32 @@ watch(seancesByDay, (newValue) => {
 }
 .flex-wrap > * {
   margin: 0.25rem;
+}
+
+/* Animation plus fluide au survol */
+.group {
+  backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* Amélioration de l'effet de survol des horaires */
+.hover\:ring-1:hover {
+  box-shadow: 0 0 0 1px var(--tw-ring-color);
+}
+
+/* Style pour le curseur sur le bouton d'effacement */
+[role="button"] {
+  cursor: pointer;
+}
+
+/* Amélioration de l'apparence des boutons de filtre */
+button {
+  border: 1px solid transparent;
+}
+
+button:focus {
+  outline: none;
+  ring: 2px;
+  ring-offset: 2px;
 }
 </style> 

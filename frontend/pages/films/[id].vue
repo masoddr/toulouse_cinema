@@ -4,34 +4,80 @@
     
     <div v-if="film" class="container mx-auto px-4 py-8">
       <div class="flex flex-col md:flex-row gap-8">
+        <!-- Poster -->
         <img :src="film.poster" :alt="film.titre" 
-             class="w-64 h-96 object-cover rounded-lg shadow-lg">
+             class="w-64 h-96 object-cover rounded-lg shadow-lg shrink-0">
         
         <div class="flex-1">
           <h1 class="text-3xl font-bold mb-4">{{ film.titre }}</h1>
           
           <div class="mb-6">
-            <p class="text-gray-600">Durée : {{ film.duree }} minutes</p>
+            <p class="text-gray-600">Durée : {{ formatDuration(film.duree) }}</p>
             <p class="text-gray-600">Date de sortie : {{ formatDate(film.date_sortie) }}</p>
             <div v-if="film.note" class="flex items-center mt-2">
               <span class="text-yellow-500 text-2xl">★</span>
               <span class="ml-2 text-xl">{{ film.note.toFixed(1) }}/10</span>
             </div>
-          </div>
 
-          <div v-if="film.trailer_url" class="mb-6">
-            <a :href="film.trailer_url" target="_blank" 
-               class="bg-red-600 text-white px-4 py-2 rounded-lg inline-flex items-center">
-              <span>Voir la bande annonce</span>
-            </a>
+            <!-- Vignette YouTube -->
+            <div v-if="trailerEmbedUrl" class="mt-4 max-w-xl">
+              <div class="relative pt-[56.25%]">
+                <iframe
+                  :src="trailerEmbedUrl"
+                  class="absolute top-0 left-0 w-full h-full rounded-lg shadow-md"
+                  title="YouTube video player"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen
+                ></iframe>
+              </div>
+            </div>
           </div>
 
           <h2 class="text-2xl font-semibold mb-4">Séances</h2>
-          <div class="grid gap-4">
-            <div v-for="seance in filmSeances" :key="`${seance.jour}-${seance.heure}`"
-                 class="bg-white p-4 rounded-lg shadow">
-              <p class="font-semibold">{{ formatDate(seance.jour) }}</p>
-              <p>{{ seance.cinema }} - {{ seance.heure }} ({{ seance.version }})</p>
+          
+          <!-- Séances groupées par jour -->
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div 
+              v-for="(seances, day) in seancesByDay" 
+              :key="day"
+              class="bg-white p-4 rounded-lg shadow"
+            >
+              <h3 class="font-semibold mb-3">{{ formatDateShort(day) }}</h3>
+              
+              <div class="space-y-3">
+                <div 
+                  v-for="(cinemaSeances, cinema) in groupSeancesByCinema(seances)" 
+                  :key="cinema"
+                  class="border-t pt-2"
+                >
+                  <h4 
+                    class="font-medium mb-2 flex items-center gap-2"
+                    :style="{ color: getCinemaColor(cinema) }"
+                  >
+                    <span 
+                      class="inline-block w-2 h-2 rounded-full"
+                      :style="{ backgroundColor: getCinemaColor(cinema) }"
+                    ></span>
+                    {{ cinema }}
+                  </h4>
+                  
+                  <div class="flex flex-wrap gap-1.5">
+                    <div
+                      v-for="seance in cinemaSeances"
+                      :key="seance.heure"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm"
+                      :style="{
+                        backgroundColor: getCinemaLightColor(cinema),
+                        color: getCinemaColor(cinema)
+                      }"
+                    >
+                      <span class="font-medium">{{ seance.heure }}</span>
+                      <span class="text-xs opacity-75">{{ seance.version }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -42,11 +88,13 @@
 
 <script setup lang="ts">
 import { useSeancesStore } from '~/stores/seances'
+import { useCinemasStore } from '~/stores/cinemas'
 import { storeToRefs } from 'pinia'
 import TheNavbar from '~/components/TheNavbar.vue'
 
 const route = useRoute()
 const store = useSeancesStore()
+const cinemaStore = useCinemasStore()
 const { seances } = storeToRefs(store)
 
 // Charger les données au montage
@@ -63,7 +111,31 @@ const filmSeances = computed(() =>
   seances.value.filter(s => s.tmdb_id === filmId)
 )
 
-// Formater la date
+// Grouper les séances par jour
+const seancesByDay = computed(() => {
+  const grouped = {} as Record<string, typeof filmSeances.value>
+  filmSeances.value.forEach(seance => {
+    const day = seance.jour.split('T')[0]
+    if (!grouped[day]) {
+      grouped[day] = []
+    }
+    grouped[day].push(seance)
+  })
+  return grouped
+})
+
+// Grouper les séances par cinéma pour un jour donné
+function groupSeancesByCinema(daySeances: typeof filmSeances.value) {
+  return daySeances.reduce((acc, seance) => {
+    if (!acc[seance.cinema]) {
+      acc[seance.cinema] = []
+    }
+    acc[seance.cinema].push(seance)
+    return acc
+  }, {} as Record<string, typeof filmSeances.value>)
+}
+
+// Formater la date complète
 const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleDateString('fr-FR', {
     weekday: 'long',
@@ -72,4 +144,44 @@ const formatDate = (dateStr: string) => {
     year: 'numeric'
   })
 }
+
+// Format court pour les dates des séances
+const formatDateShort = (dateStr: string) => {
+  return new Date(dateStr).toLocaleDateString('fr-FR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long'
+  })
+}
+
+// Formater la durée en heures et minutes
+const formatDuration = (minutes: number) => {
+  const hours = Math.floor(minutes / 60)
+  const remainingMinutes = minutes % 60
+  
+  if (hours === 0) {
+    return `${minutes}min`
+  }
+  
+  if (remainingMinutes === 0) {
+    return `${hours}h`
+  }
+  
+  return `${hours}h${remainingMinutes.toString().padStart(2, '0')}`
+}
+
+// Couleurs des cinémas
+const getCinemaColor = (cinema: string) => cinemaStore.getColor(cinema)
+const getCinemaLightColor = (cinema: string) => cinemaStore.getLightColor(cinema)
+
+// Convertir l'URL YouTube en URL d'intégration
+const trailerEmbedUrl = computed(() => {
+  if (!film.value?.trailer_url) return null
+  
+  const videoId = film.value.trailer_url.match(/(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/watch\?.+&v=))([\w-]{11})/)?.[1]
+  
+  if (!videoId) return null
+  
+  return `https://www.youtube.com/embed/${videoId}`
+})
 </script> 

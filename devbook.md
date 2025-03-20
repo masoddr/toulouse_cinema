@@ -72,12 +72,12 @@ Développer une application web qui agrège les séances de cinéma de tous les 
    - Recherche par titre/cinéma
    - Filtres (VF/VOST, 3D, etc.)
 
-2. **Page film** (`/film/[id]`)
+2. **Page film** (`/film/[titre]`)
    - Détails du film
    - Liste des séances par cinéma
    - Carte interactive des cinémas
 
-3. **Page cinéma** (`/cinema/[id]`)
+3. **Page cinéma** (`/cinema/[cinema]`)
    - Informations du cinéma
    - Programme du jour/semaine
 
