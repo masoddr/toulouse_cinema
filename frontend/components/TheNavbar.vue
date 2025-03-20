@@ -8,17 +8,10 @@
         
         <div class="flex space-x-4">
           <NuxtLink 
-            v-for="cinema in cinemas" 
-            :key="cinema"
-            :to="`/cinemas/${cinema}`"
-            class="hover:text-opacity-90 transition-colors flex items-center gap-2"
-            :style="{ color: getCinemaColor(cinema) }"
+            to="/cinemas"
+            class="hover:text-opacity-90 transition-colors"
           >
-            <span 
-              class="inline-block w-2 h-2 rounded-full"
-              :style="{ backgroundColor: getCinemaColor(cinema) }"
-            ></span>
-            {{ cinema }}
+            Les cinémas
           </NuxtLink>
         </div>
       </div>
@@ -27,13 +20,5 @@
 </template>
 
 <script setup lang="ts">
-import { useSeancesStore } from '~/stores/seances'
-import { useCinemasStore } from '~/stores/cinemas'
-import { storeToRefs } from 'pinia'
-
-const store = useSeancesStore()
-const cinemaStore = useCinemasStore()
-const { cinemas } = storeToRefs(store)
-
-const getCinemaColor = (cinema: string) => cinemaStore.getColor(cinema)
+// Les imports ne sont plus nécessaires car nous n'utilisons plus les stores
 </script> 
