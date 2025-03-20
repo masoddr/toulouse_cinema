@@ -1,318 +1,225 @@
 <template>
-  <div>
-    <DaySelector v-if="!loading" @update:day="updateSelectedDay" />
-    
-    <div class="container mx-auto px-4 py-8">
-      <!-- État de chargement -->
-      <div v-if="loading" class="text-center py-12">
-        <p class="text-xl text-gray-600">Chargement des séances...</p>
-      </div>
-      
-      <!-- Message d'erreur -->
-      <div v-else-if="error" class="text-center py-12">
-        <p class="text-xl text-red-600">{{ error }}</p>
-      </div>
-
-      <!-- Contenu principal -->
-      <div v-else>
-        <!-- Filtres -->
-        <div class="mb-8 space-y-4">
-          <!-- Barre de recherche -->
-          <div class="max-w-xl mx-auto">
-            <div class="relative">
-              <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Rechercher un film..."
-                class="w-full px-4 py-2 pr-10 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-              >
-              <span 
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                v-if="searchQuery"
-                @click="searchQuery = ''"
-                role="button"
-                title="Effacer la recherche"
-              >
-                ✕
-              </span>
-            </div>
-          </div>
-
-          <!-- Filtres par cinéma -->
-          <div class="flex flex-wrap justify-center gap-2">
-            <button
-              class="px-4 py-2 rounded-full text-sm font-medium transition-colors"
-              :class="selectedCinema === null ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-              @click="selectedCinema = null"
-            >
-              Tous les cinémas
-            </button>
-            <button
-              v-for="cinema in cinemas"
-              :key="cinema"
-              class="px-4 py-2 rounded-full text-sm font-medium transition-colors"
-              :class="selectedCinema === cinema ? 'text-white' : 'hover:bg-opacity-10'"
-              :style="{
-                backgroundColor: selectedCinema === cinema ? getCinemaColor(cinema) : getCinemaLightColor(cinema),
-                color: selectedCinema === cinema ? 'white' : getCinemaColor(cinema)
-              }"
-              @click="selectedCinema = cinema"
-            >
-              {{ cinema }}
-            </button>
-          </div>
-        </div>
-
-        <div class="mb-4 flex justify-end">
-          <select v-model="sortBy" class="p-2 border rounded-md">
-            <option value="default">Tri par défaut</option>
-            <option value="rating">Tri par note</option>
-            <option value="duration">Tri par durée</option>
-          </select>
-        </div>
-
-        <h1 class="text-3xl font-bold mb-8">Programme des séances</h1>
-        
-        <div v-if="filteredDayFilms.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-          <NuxtLink
-            v-for="film in sortedMovies"
-            :key="film.tmdb_id"
-            :to="`/films/${film.tmdb_id}`"
-            class="bg-white rounded-lg shadow-md overflow-hidden transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group"
-          >
-            <!-- Image avec overlay au survol -->
-            <div class="relative">
-              <img :src="film.poster" :alt="film.titre" 
-                   class="w-full h-[360px] object-cover">
-              <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <!-- Suppression du contenu de l'overlay puisqu'il n'est plus nécessaire -->
-              </div>
-            </div>
-            
-            <!-- Informations du film -->
-            <div class="p-4">
-              <h3 class="font-bold text-lg mb-2 group-hover:text-blue-600 transition-colors">
-                {{ film.titre }}
-              </h3>
-
-              <!-- Déplacement des informations de durée et note ici -->
-              <div class="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                <span>{{ formatDuration(film.duree) }}</span>
-                <span v-if="film.note" class="flex items-center">
-                  <span class="text-yellow-400">★</span>
-                  <span class="ml-1">{{ film.note.toFixed(1) }}</span>
-                </span>
-              </div>
-
-              <!-- Séances par cinéma -->
-              <div class="space-y-3">
-                <div 
-                  v-for="(seances, cinema) in filmSeancesByCinema(film.tmdb_id)" 
-                  :key="cinema"
-                  class="border-t pt-2"
-                >
-                  <h4 
-                    class="font-medium mb-2 flex items-center gap-2"
-                    :style="{ color: getCinemaColor(cinema) }"
-                  >
-                    <span 
-                      class="inline-block w-2 h-2 rounded-full"
-                      :style="{ backgroundColor: getCinemaColor(cinema) }"
-                    ></span>
-                    {{ cinema }}
-                  </h4>
-                  <div class="flex flex-wrap gap-1.5">
-                    <div
-                      v-for="seance in seances"
-                      :key="seance.heure"
-                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm transition-colors"
-                      :style="{
-                        backgroundColor: getCinemaLightColor(cinema),
-                        color: getCinemaColor(cinema),
-                        '--tw-ring-color': getCinemaColor(cinema)
-                      }"
-                    >
-                      <span class="font-medium">{{ seance.heure }}</span>
-                      <span 
-                        class="text-xs opacity-75"
-                        :style="{ color: getCinemaColor(cinema) }"
-                      >
-                        {{ seance.version }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+  <main class="hero">
+    <div class="hero-overlay">
+      <div class="content-wrapper">
+        <div class="hero-content">
+          <h1 class="fade-in">
+            Découvrez le cinéma
+            <span class="accent">à Toulouse</span>
+          </h1>
+          <p class="subtitle fade-in-delay">
+            Explorez toute la programmation des salles toulousaines en un seul endroit. 
+            Des blockbusters aux films d'auteur, trouvez votre prochaine séance.
+          </p>
+          <NuxtLink to="/films" class="cta-button fade-in-delay-2">
+            <span>Voir les séances</span>
+            <svg class="arrow" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </NuxtLink>
-        </div>
-        <div v-else class="text-center py-12 text-gray-500">
-          Aucun film ne correspond à votre recherche
         </div>
       </div>
     </div>
-
-    <ScrollToTop />
-  </div>
+  </main>
 </template>
 
 <script setup lang="ts">
-import { useSeancesStore } from '~/stores/seances'
-import { useCinemasStore } from '~/stores/cinemas'
-import { storeToRefs } from 'pinia'
-import ScrollToTop from '~/components/ScrollToTop.vue'
-
-const store = useSeancesStore()
-const cinemaStore = useCinemasStore()
-const { seancesByDay, loading, error, cinemas } = storeToRefs(store)
-
-// États des filtres
-const searchQuery = ref('')
-const selectedCinema = ref<string | null>(null)
-const sortBy = ref('default')
-
-// État de la recherche
-const selectedDay = ref('')
-const selectedDaySeances = computed(() => 
-  selectedDay.value ? seancesByDay.value[selectedDay.value] : []
-)
-
-// Obtenir les films uniques pour le jour sélectionné
-const selectedDayFilms = computed(() => {
-  if (!selectedDaySeances.value) return []
-  
-  const uniqueFilms = new Map()
-  selectedDaySeances.value.forEach(seance => {
-    if (!uniqueFilms.has(seance.tmdb_id)) {
-      uniqueFilms.set(seance.tmdb_id, seance)
-    }
-  })
-  return Array.from(uniqueFilms.values())
-})
-
-// Filtrer les films par titre et cinéma
-const filteredDayFilms = computed(() => {
-  let films = selectedDayFilms.value
-
-  // Filtre par recherche
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase().trim()
-    films = films.filter(film => 
-      film.titre.toLowerCase().includes(query)
-    )
-  }
-
-  // Filtre par cinéma
-  if (selectedCinema.value) {
-    films = films.filter(film => {
-      const seances = filmSeancesByCinema(film.tmdb_id)
-      return seances[selectedCinema.value]?.length > 0
-    })
-  }
-
-  return films
-})
-
-// Grouper les séances par cinéma pour un film donné
-function filmSeancesByCinema(filmId: number) {
-  if (!selectedDaySeances.value) return {}
-  
-  const filmSeances = selectedDaySeances.value.filter(s => s.tmdb_id === filmId)
-  return filmSeances.reduce((acc, seance) => {
-    if (!acc[seance.cinema]) {
-      acc[seance.cinema] = []
-    }
-    acc[seance.cinema].push(seance)
-    return acc
-  }, {} as Record<string, typeof selectedDaySeances.value>)
-}
-
-function updateSelectedDay(day: string) {
-  selectedDay.value = day
-}
-
-// Sélectionner automatiquement le premier jour disponible
-watch(seancesByDay, (newValue) => {
-  if (!selectedDay.value && Object.keys(newValue).length > 0) {
-    selectedDay.value = Object.keys(newValue).sort()[0]
-  }
-}, { immediate: true })
-
-// Fonctions pour les couleurs des cinémas
-const getCinemaColor = (cinema: string) => cinemaStore.getColor(cinema)
-const getCinemaLightColor = (cinema: string) => cinemaStore.getLightColor(cinema)
-
-// Formater la durée en heures et minutes
-const formatDuration = (minutes: number) => {
-  const hours = Math.floor(minutes / 60)
-  const remainingMinutes = minutes % 60
-  
-  if (hours === 0) {
-    return `${minutes}min`
-  }
-  
-  if (remainingMinutes === 0) {
-    return `${hours}h`
-  }
-  
-  return `${hours}h${remainingMinutes.toString().padStart(2, '0')}`
-}
-
-const sortedMovies = computed(() => {
-  if (sortBy.value === 'rating') {
-    return [...filteredDayFilms.value].sort((a, b) => b.note - a.note)
-  }
-  if (sortBy.value === 'duration') {
-    return [...filteredDayFilms.value].sort((a, b) => a.duree - b.duree)
-  }
-  return filteredDayFilms.value
-})
-
-// Charger les données au montage
 onMounted(() => {
-  store.fetchSeances()
-})
+  // Effet parallaxe au défilement
+  const handleScroll = () => {
+    const scrolled = window.pageYOffset;
+    const hero = document.querySelector('.hero');
+    if (hero) {
+      (hero as HTMLElement).style.backgroundPositionY = `${scrolled * 0.5}px`;
+    }
+  };
+
+  window.addEventListener('scroll', handleScroll);
+
+  // Nettoyage de l'event listener
+  onUnmounted(() => {
+    window.removeEventListener('scroll', handleScroll);
+  });
+});
 </script>
 
 <style scoped>
-/* Pour assurer que les séances s'affichent correctement sur mobile */
-.flex-wrap {
-  margin: -0.25rem;
-}
-.flex-wrap > * {
-  margin: 0.25rem;
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@300;400&display=swap');
+
+.hero {
+  height: 100vh;
+  width: 100%;
+  position: relative;
+  background-image: url('/images/cinema-hero.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
 }
 
-/* Animation plus fluide au survol */
-.group {
-  backface-visibility: hidden;
-  -webkit-font-smoothing: subpixel-antialiased;
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.6) 50%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+  backdrop-filter: blur(1px);
 }
 
-/* Amélioration de l'effet de survol des horaires */
-.hover\:ring-1:hover {
-  box-shadow: 0 0 0 1px var(--tw-ring-color);
+.content-wrapper {
+  height: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 5rem;
+  display: flex;
+  align-items: center;
 }
 
-/* Style pour le curseur sur le bouton d'effacement */
-[role="button"] {
-  cursor: pointer;
+.hero-content {
+  width: 40%;
+  min-width: 500px;
 }
 
-/* Amélioration de l'apparence des boutons de filtre */
-button {
-  border: 1px solid transparent;
+h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.5rem, 4vw, 3.5rem);
+  color: white;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-button:focus {
-  outline: none;
-  ring: 2px;
-  ring-offset: 2px;
+.accent {
+  display: block;
+  color: #E4D9FF;
+  font-weight: 600;
 }
 
-.duration {
-  font-size: 0.9em;
-  color: #666;
-  margin: 4px 0;
+.subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(1rem, 1.2vw, 1.2rem);
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.8;
+  margin-bottom: 2.5rem;
+  font-weight: 300;
+}
+
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  color: white;
+  text-decoration: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cta-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.arrow {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.3s ease;
+}
+
+.cta-button:hover .arrow {
+  transform: translateX(5px);
+}
+
+/* Animations */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeIn 0.8s ease forwards;
+}
+
+.fade-in-delay {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeIn 0.8s ease forwards 0.3s;
+}
+
+.fade-in-delay-2 {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeIn 0.8s ease forwards 0.6s;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .content-wrapper {
+    padding: 0 3rem;
+  }
+  
+  .hero-content {
+    width: 60%;
+    min-width: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-wrapper {
+    padding: 0 1.5rem;
+  }
+  
+  .hero-content {
+    width: 100%;
+    padding: 0 1rem;
+  }
+  
+  h1 {
+    font-size: 2.5rem;
+  }
+  
+  .subtitle {
+    font-size: 1rem;
+  }
+  
+  .cta-button {
+    width: calc(100% - 2rem);
+    justify-content: center;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    margin: 0 auto;
+  }
+
+  .arrow {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  .content-wrapper {
+    padding: 0 1rem;
+  }
+  
+  .hero-content {
+    padding: 0 0.5rem;
+  }
+  
+  .cta-button {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
 }
 </style> 

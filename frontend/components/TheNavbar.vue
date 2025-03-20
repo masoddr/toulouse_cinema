@@ -10,9 +10,9 @@
         <!-- Menu desktop -->
         <div class="hidden md:flex space-x-8">
           <NuxtLink 
-            to="/" 
+            to="/films" 
             class="text-gray-300 hover:text-white transition-colors"
-            :class="{ 'text-white font-medium': route.path === '/' }"
+            :class="{ 'text-white font-medium': route.path === '/films' }"
           >
             Séances
           </NuxtLink>
@@ -56,9 +56,9 @@
       >
         <div class="py-4 space-y-4">
           <NuxtLink 
-            to="/" 
+            to="/films" 
             class="block px-4 py-2 text-gray-300 hover:bg-gray-600 hover:text-white"
-            :class="{ 'text-white bg-gray-600': route.path === '/' }"
+            :class="{ 'text-white bg-gray-600': route.path === '/films' }"
             @click="isMenuOpen = false"
           >
             Séances
