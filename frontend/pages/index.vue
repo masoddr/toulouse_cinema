@@ -21,6 +21,22 @@
       </div>
     </div>
   </main>
+  <div class="container mx-auto px-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div v-for="movie in movies" :key="movie.id" class="flex flex-col">
+        <NuxtLink :to="`/films/${movie.id}`" class="movie-card">
+          <div class="relative aspect-[2/3] w-full">
+            <img
+              :src="movie.poster_path"
+              :alt="movie.title"
+              class="rounded-lg object-cover w-full h-full"
+            />
+          </div>
+          <h3 class="mt-2 text-sm sm:text-base font-medium line-clamp-2">{{ movie.title }}</h3>
+        </NuxtLink>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
