@@ -7,6 +7,9 @@ export default defineNuxtConfig({
     prerender: {
       crawlLinks: true,
       routes: ['/']
+    },
+    server: {
+      port: process.env.PORT
     }
   },
 
