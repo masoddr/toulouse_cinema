@@ -144,6 +144,8 @@
         </div>
       </div>
     </div>
+
+    <ScrollToTop />
   </div>
 </template>
 
@@ -151,6 +153,7 @@
 import { useSeancesStore } from '~/stores/seances'
 import { useCinemasStore } from '~/stores/cinemas'
 import { storeToRefs } from 'pinia'
+import ScrollToTop from '~/components/ScrollToTop.vue'
 
 const store = useSeancesStore()
 const cinemaStore = useCinemasStore()
