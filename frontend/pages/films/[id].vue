@@ -85,6 +85,28 @@
         </div>
       </div>
     </div>
+
+    <!-- Bouton flottant de retour -->
+    <NuxtLink 
+      to="/films" 
+      class="fixed bottom-6 right-6 bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-full shadow-lg flex items-center gap-2 transition-all duration-300 hover:scale-105"
+    >
+      <svg 
+        class="w-5 h-5 rotate-180" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path 
+          d="M5 12H19M19 12L12 5M19 12L12 19" 
+          stroke="currentColor" 
+          stroke-width="1.5" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"
+        />
+      </svg>
+      <span>Retour aux séances</span>
+    </NuxtLink>
   </div>
 </template>
 
