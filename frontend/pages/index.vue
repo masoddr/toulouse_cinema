@@ -1,6 +1,5 @@
 <template>
   <div>
-    <TheNavbar />
     <DaySelector v-if="!loading" @update:day="updateSelectedDay" />
     
     <div class="container mx-auto px-4 py-8">
@@ -64,11 +63,19 @@
           </div>
         </div>
 
+        <div class="mb-4 flex justify-end">
+          <select v-model="sortBy" class="p-2 border rounded-md">
+            <option value="default">Tri par défaut</option>
+            <option value="rating">Tri par note</option>
+            <option value="duration">Tri par durée</option>
+          </select>
+        </div>
+
         <h1 class="text-3xl font-bold mb-8">Programme des séances</h1>
         
         <div v-if="filteredDayFilms.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           <NuxtLink
-            v-for="film in filteredDayFilms"
+            v-for="film in sortedMovies"
             :key="film.tmdb_id"
             :to="`/films/${film.tmdb_id}`"
             class="bg-white rounded-lg shadow-md overflow-hidden transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group"
@@ -162,6 +169,7 @@ const { seancesByDay, loading, error, cinemas } = storeToRefs(store)
 // États des filtres
 const searchQuery = ref('')
 const selectedCinema = ref<string | null>(null)
+const sortBy = ref('default')
 
 // État de la recherche
 const selectedDay = ref('')
@@ -249,6 +257,16 @@ const formatDuration = (minutes: number) => {
   
   return `${hours}h${remainingMinutes.toString().padStart(2, '0')}`
 }
+
+const sortedMovies = computed(() => {
+  if (sortBy.value === 'rating') {
+    return [...filteredDayFilms.value].sort((a, b) => b.note - a.note)
+  }
+  if (sortBy.value === 'duration') {
+    return [...filteredDayFilms.value].sort((a, b) => a.duree - b.duree)
+  }
+  return filteredDayFilms.value
+})
 
 // Charger les données au montage
 onMounted(() => {
