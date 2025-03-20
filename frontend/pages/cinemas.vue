@@ -11,6 +11,26 @@
     </NuxtLink>
 
     <h1 class="text-3xl font-bold mb-6">Nos Cinémas</h1>
+
+    <!-- Conteneur de la carte -->
+    <div class="map-container">
+      <ClientOnly>
+        <l-map :zoom="13" :center="[43.604, 1.444]">
+          <l-tile-layer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution="&copy; OpenStreetMap contributors"
+          />
+          <l-marker
+            v-for="cinema in cinemas"
+            :key="cinema.id"
+            :lat-lng="[cinema.latitude, cinema.longitude]"
+          >
+            <l-popup>{{ cinema.nom }}</l-popup>
+          </l-marker>
+        </l-map>
+      </ClientOnly>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div v-for="cinema in cinemas" :key="cinema.id" class="bg-white rounded-lg shadow-md p-6">
         <h2 class="text-xl font-semibold mb-2">{{ cinema.nom }}</h2>
@@ -38,61 +58,23 @@
   </div>
 </template>
 
-<script setup>
-const cinemas = ref([
-  {
-    id: 'ABC',
-    nom: 'ABC',
-    adresse: '13 Rue Saint-Bernard',
-    ville: 'Toulouse',
-    nombreSalles: 3,
-    telephone: '05 61 21 20 46',
-    siteWeb: 'https://abc-toulouse.fr'
-  },
-  {
-    id: 'AMERICAN_COSMOGRAPH', 
-    nom: 'American Cosmograph',
-    adresse: '24 Rue Montardy',
-    ville: 'Toulouse',
-    nombreSalles: 3,
-    telephone: '05 61 21 22 11',
-    siteWeb: 'https://www.american-cosmograph.fr'
-  },
-  {
-    id: 'UTOPIA_BORDEROUGE',
-    nom: 'Utopia Borderouge',
-    adresse: '59 Avenue Maurice Bourges-Maunoury',
-    ville: 'Toulouse',
-    nombreSalles: 3,
-    telephone: '05 61 50 50 43',
-    siteWeb: 'http://www.cinemas-utopia.org/toulouse'
-  },
-  {
-    id: 'CRATERE',
-    nom: 'Le cratère',
-    adresse: '95 Grande Rue Saint-Michel',
-    ville: 'Toulouse',
-    nombreSalles: 1,
-    telephone: '05 61 53 50 53',
-    siteWeb: 'https://www.cinemalecratere.com'
-  },
-  {
-    id: 'PATHE_WILSON',
-    nom: 'Pathé Wilson',
-    adresse: '3 Place du Président Thomas Wilson',
-    ville: 'Toulouse', 
-    nombreSalles: 8,
-    telephone: '08 92 69 66 96',
-    siteWeb: 'https://www.pathe.fr/cinemas/cinema-pathe-wilson'
-  },
-  {
-    id: 'UGC_MONTAUDRAN',
-    nom: 'UGC Montaudran',
-    adresse: '10 Avenue Didier Daurat',
-    ville: 'Toulouse',
-    nombreSalles: 7,
-    telephone: '05 61 00 85 50',
-    siteWeb: 'https://www.ugc.fr/cinema-ugc-montaudran.html'
-  }
-])
-</script> 
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useCinemasStore } from '~/stores/cinemas'
+
+const cinemasStore = useCinemasStore()
+const cinemas = computed(() => cinemasStore.cinemas)
+</script>
+
+<style>
+.map-container {
+  height: 500px;
+  width: 100%;
+  margin: 20px 0;
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+}
+</style> 

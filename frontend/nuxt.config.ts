@@ -21,5 +21,14 @@ export default defineNuxtConfig({
     public: 'public'
   },
 
+  // Configuration de Leaflet
+  plugins: [
+    '~/plugins/leaflet.client.ts'
+  ],
+
+  build: {
+    transpile: ['@vue-leaflet/vue-leaflet']
+  },
+
   compatibilityDate: '2025-03-20'
 })
