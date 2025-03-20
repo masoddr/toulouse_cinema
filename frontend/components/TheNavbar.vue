@@ -2,10 +2,19 @@
   <nav class="fixed top-0 left-0 right-0 bg-gray-800 shadow-md z-50">
     <div class="container mx-auto px-4">
       <div class="flex justify-between items-center h-16">
-        <!-- Logo / Titre -->
-        <NuxtLink to="/" class="text-xl font-bold text-white">
-          Cinémas à Toulouse
-        </NuxtLink>
+        <!-- Logo -->
+        <div class="flex items-center">
+          <NuxtLink to="/" class="flex items-center gap-2">
+            <img 
+              src="/images/logo.png" 
+              alt="Logo Cinémas Toulouse" 
+              class="h-8 w-8"
+            />
+            <span class="text-xl font-semibold text-white">
+              Cinémas Toulouse
+            </span>
+          </NuxtLink>
+        </div>
 
         <!-- Menu desktop -->
         <div class="hidden md:flex space-x-8">
